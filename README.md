@@ -1,8 +1,8 @@
 ---
 title: PoliGen
 emoji: 📄🤖
-colorFrom: indigo
-colorTo: blue
+colorFrom: green
+colorTo: indigo
 sdk: docker
 pinned: false
 app_file: app.py
