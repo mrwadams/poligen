@@ -1,3 +1,14 @@
+---
+title: PoliGen
+emoji: 📄🤖
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+pinned: false
+app_file: app.py
+license: mit
+---
+
 <div style="text-align:center"><img src="poligen_logo.png" alt="PoliGen Logo" width="400" /></div>
 
 # PoliGen 📄🤖
