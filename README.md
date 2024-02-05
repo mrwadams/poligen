@@ -1,4 +1,4 @@
-![PoliGen Logo](poligen_logo.png)
+<div style="text-align:center"><img src="poligen_logo.png" alt="PoliGen Logo" width="400" /></div>
 
 # PoliGen 📄🤖
 ## A Multi-Agent Chat Interface for Generating Cybersecurity Policies
