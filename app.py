@@ -1,3 +1,4 @@
+import os
 from typing import Dict, Optional, Union
 
 import chainlit as cl
@@ -42,6 +43,13 @@ CONTEXT = """- Task: PoliGen specialises in creating high-quality and detailed c
 USER_PROXY_NAME = "User Proxy"
 REVIEWER = "Reviewer"
 WRITER = "Technical Writer"
+
+# Config list for AutoGen
+config_list = [
+    {
+        "model": "gpt-4-turbo-preview",
+    },
+]
     
 async def ask_helper(func, **kwargs):
     res = await func(**kwargs).send()
@@ -121,15 +129,6 @@ class ChainlitUserProxyAgent(UserProxyAgent):
         )
 
 
-
-config_list = [
-    {
-        "model": "gpt-4-turbo-preview",
-    },
-]
-
-
-
 @cl.action_callback("confirm_action")
 async def on_action(action: cl.Action):
     if action.value == "everything":
@@ -150,15 +149,14 @@ async def on_action(action: cl.Action):
     
 @cl.on_chat_start
 async def start():
-#  OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-  OPENAI_API_KEY = cl.user_session.get("OPENAI_API_KEY")
-
+  # Retrieve the 'env' dictionary from the user session
+  env_variables = cl.user_session.get("env")
+  # Set OPENAI_API_KEY environment variable
+  os.environ["OPENAI_API_KEY"] = env_variables.get("OPENAI_API_KEY")
 
   try:
-    # app_user = cl.user_session.get("user")
-    # await cl.Message(f"Hello {app_user.username}").send()
-    # config_list = config_list_from_json(env_or_file="OAI_CONFIG_LIST")
-    llm_config = {"config_list": config_list, "api_key": OPENAI_API_KEY, "seed": 42, "request_timeout": 120, "retry_wait_time": 10}
+    llm_config = {"config_list": config_list, "seed": 42}
+
     reviewer = ChainlitAssistantAgent(
         name="Reviewer", llm_config=llm_config,
         system_message="""Reviewer. Reviews the policy document, focuses on the structure and clarity of the content.
@@ -187,9 +185,7 @@ Structures content with effective subheadings and bullet points to facilitate re
     cl.user_session.set(REVIEWER, reviewer)
     cl.user_session.set(WRITER, writer)
     
-    msg = cl.Message(content=f"""Hi, this is the PoliGen agent team 🤖. Please specify a cybersecurity domain for us to write a policy about (e.g. Data Classification, Remote Access).""", 
-                     disable_human_feedback=True, 
-                     author="User_Proxy")
+    msg = cl.Message(content=f"""Hi, this is the PoliGen agent team 🤖. Please specify a cybersecurity domain for us to write a policy about (e.g. Data Classification, Remote Access).""", author="User_Proxy")
     await msg.send()
     
   except Exception as e:
@@ -198,6 +194,7 @@ Structures content with effective subheadings and bullet points to facilitate re
 
 @cl.on_message
 async def run_conversation(message: cl.Message):
+    llm_config = {"config_list": config_list, "seed": 42}
   #try:
     MESSAGE = message.content
     print("Task: ", MESSAGE)
@@ -206,7 +203,7 @@ async def run_conversation(message: cl.Message):
     writer = cl.user_session.get(WRITER)
 
     groupchat = autogen.GroupChat(agents=[user_proxy, reviewer, writer], messages=[], max_round=10)
-    manager = autogen.GroupChatManager(groupchat=groupchat)
+    manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
     
     print("Initiated GC messages... \nGC messages length: ", len(groupchat.messages))
 
