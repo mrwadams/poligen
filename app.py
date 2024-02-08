@@ -159,17 +159,15 @@ async def start():
 
     reviewer = ChainlitAssistantAgent(
         name="Reviewer", llm_config=llm_config,
-        system_message="""Reviewer. Reviews the policy document, focuses on the structure and clarity of the content.
-Ensures policies are detailed and thorough.
-Highly focussed on helping the Technical Writer to create a high-quality policy document.
-Only provides suggestions for improvement."""
+        system_message="""In the role of the Reviewer, your main objective is evaluating the policy document regarding its organisation and coherence, along with recommending improvements.
+        You must pay meticulous attention to detail and make certain that the policies are complete and precise. 
+        Above all else, maintain a constructive attitude by offering solely helpful recommendations aimed at assisting the Technical Writer in generating top-notch policy documents."""
     )
     writer = ChainlitAssistantAgent(
         name="Technical_Writer", llm_config=llm_config,
-        system_message="""Technical Writer. Creates high-quality and detailed information security policies, focusing on recognised information security best practices.
-Writes policy documents that are thorough and detailed.
-Crafts documents using a formal and professional tone.
-Structures content with effective subheadings and bullet points to facilitate reader comprehension."""
+        system_message="""As the Technical Writer, your primary responsibility is creating highly detailed and informative information security policies aligned with recognised industry best practices.
+        Your focus is on producing well-structured documents written in a formal and professional tone, incorporating appropriate headings, subheadings, and bullet points to aid readability.
+        Ensure that the generated policies are exhaustive yet concise while maintaining clarity."""
     )
     user_proxy = ChainlitUserProxyAgent(
         name="User_Proxy",
