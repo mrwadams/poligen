@@ -1,2 +1,2 @@
-pyautogen
-chainlit
+pyautogen==0.2.10
+chainlit==1.0.200
