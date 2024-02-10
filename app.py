@@ -93,20 +93,37 @@ class ChainlitUserProxyAgent(UserProxyAgent):
                     cl.AskActionMessage,
                     content="Continue or provide feedback?",
                     actions=[
-                        cl.Action( name="continue", value="continue", label="✅ Continue" ),
-                        cl.Action( name="feedback",value="feedback", label="💬 Provide feedback"),
-                        cl.Action( name="exit",value="exit", label="🔚 Exit Conversation" )
+                        cl.Action(name="continue", value="continue", label="✅ Continue"),
+                        cl.Action(name="feedback", value="feedback", label="💬 Provide feedback"),
+                        cl.Action(name="exit", value="exit", label="🔚 Exit Conversation")
                     ],
                 )
             )
             if res.get("value") == "continue":
                 return ""
-            if res.get("value") == "exit":
+            elif res.get("value") == "feedback":
+                # Prompt the user for feedback
+                feedback_prompt = "Please provide your feedback:"
+                feedback_reply = cl.run_sync(ask_helper(cl.AskUserMessage, content=feedback_prompt, timeout=60))
+                if "content" in feedback_reply:
+                    # Return the feedback content to be used as the next message
+                    return feedback_reply["content"].strip()
+                else:
+                    print("No feedback provided.")
+                    return ""
+            elif res.get("value") == "exit":
                 return "exit"
-
-        reply = cl.run_sync(ask_helper(cl.AskUserMessage, content=prompt, timeout=60))
-
-        return reply["content"].strip()
+            else:
+                # Handle other cases or errors
+                return ""
+        else:
+            reply = cl.run_sync(ask_helper(cl.AskUserMessage, content=prompt, timeout=60))
+            if "content" in reply:
+                return reply["content"].strip()
+            else:
+                # Handle the absence of 'content' key gracefully
+                print("No content received. Reply was:", reply)
+                return ""
 
     def send(
         self,
@@ -166,8 +183,14 @@ async def start():
     writer = ChainlitAssistantAgent(
         name="Technical_Writer", llm_config=llm_config,
         system_message="""As the Technical Writer, your primary responsibility is creating highly detailed and informative information security policies aligned with recognised industry best practices.
+        
         Your focus is on producing well-structured documents written in a formal and professional tone, incorporating appropriate headings, subheadings, and bullet points to aid readability.
-        Ensure that the generated policies are exhaustive yet concise while maintaining clarity."""
+        
+        Ensure that the generated policies are exhaustive yet concise while maintaining clarity.
+        
+        Effective policies are at least three pages long and contain at least five bullet points in each policy detail section. If you meet these requirements you will receive a performance bonus of $500.
+        
+        When updating the policy document in response to the Reviewer's feedback, ensure that you provide the full contents of the policy document. DO NOT reply with just the changes made."""
     )
     user_proxy = ChainlitUserProxyAgent(
         name="User_Proxy",
@@ -176,7 +199,7 @@ async def start():
         # max_consecutive_auto_reply=3,
         # is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
         code_execution_config=False,
-        system_message="""User Proxy. Provides feedback on the policy document and guides the team through the process."""
+        system_message="""User Proxy. Provides feedback on the policy document and guides the team through the process. Ask if the user wants to provide feedback after the Reviewer's evaluation."""
     )
     
     cl.user_session.set(USER_PROXY_NAME, user_proxy)
